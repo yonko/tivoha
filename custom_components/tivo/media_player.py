@@ -334,7 +334,7 @@ class TivoDevice(MediaPlayerDevice):
             self.disconnect()
             return data.decode()
         except Exception:
-            raise
+            return "INVALID CONNECTION"
 
     def channel_scan(self):
         for i in range(1, self._channel_max):
@@ -365,7 +365,7 @@ class TivoDevice(MediaPlayerDevice):
         """ LIVETV_READY before issuing a SETCH or FORCECH command. """
         data = self.send_code('LIVETV', 'TELEPORT')
         self._current["mode"] = "TV"
-        return data.decode()
+        return data
 
     @property
     def show_guide(self):
@@ -374,7 +374,7 @@ class TivoDevice(MediaPlayerDevice):
         """ Also returns status as with NOWPLAYING, e.g. CH_STATUS 0613 LOCAL """
         data = self.send_code('GUIDE', 'TELEPORT')
         self._current["mode"] = "GUIDE"
-        return data.decode()
+        return data
 
     @property
     def show_tivo(self):
@@ -382,7 +382,7 @@ class TivoDevice(MediaPlayerDevice):
         """Tivo menu."""
         self.send_code('TIVO', 'TELEPORT')
         self._current["mode"] = "MENU"
-        return data.decode()
+        return data
 
     @property
     def show_now(self):
@@ -390,7 +390,7 @@ class TivoDevice(MediaPlayerDevice):
         """Now playing."""
         data = self.send_code('NOWPLAYING', 'TELEPORT')
         self._current["mode"] = "NOWPLAYING"
-        return data.decode()
+        return data
 
     @property
     def show_vod(self):
@@ -398,7 +398,7 @@ class TivoDevice(MediaPlayerDevice):
         """ Activate Video on demand menu """
         data = self.send_code('VIDEO_ON_DEMAND','KEYBOARD')
         self._current["mode"] = "VIDEO"
-        return data.decode()
+        return data
 
     def channel_set(self, channel):
         """Channel set."""
@@ -604,9 +604,14 @@ class Zap2ItClient:
         header = {'content-type': 'application/json'}
 
         req = urllib.request.Request(url=login, data=tosend_json, headers=header, method='POST')
-        res = urllib.request.urlopen(req, timeout=5)
 
-        rawrtrn = res.read().decode('utf8')
+        try:
+            res = urllib.request.urlopen(req, timeout=5)
+
+            rawrtrn = res.read().decode('utf8')
+        except Exception:
+            return
+
         rtrn = json.loads(rawrtrn)
 
         self._token = rtrn['token']
@@ -639,19 +644,18 @@ class Zap2ItClient:
         req = urllib.request.Request(url=url,headers=header, method='GET')
         res = urllib.request.urlopen(req, timeout=5)
 
-        #self._raw = res.read().decode('utf8')
-        #self._zapraw = json.loads(self._raw)
+        try:
+            self._raw = res.read().decode('utf8')
+            self._zapraw = json.loads(self._raw)
+        except Exception:
+            return
+
         #self._zapraw = json.loads(res.read().decode('utf8'))
 
         if self.debug:
-            self._raw = res.read().decode('utf8')
-            self._zapraw = json.loads(self._raw)
-
             f = open('/tmp/zapraw','w')
             f.write(self._raw)
             f.close()
-        else:
-            self._zapraw = json.loads(res.read().decode('utf8'))
 
         self.get_channels()
         self.get_titles()
@@ -677,6 +681,11 @@ class Zap2ItClient:
         for channelData in self._zapraw['channels']:
             _ch = channelData['channelNo'].zfill(4)
             _ev = channelData['events']
+
+            if not _ev:
+                if self.debug:
+                    _LOGGER.warning("No events found for channel:  %s", _ch)
+                continue
 
             tmp = _ev[0]
             prog = tmp['program']
