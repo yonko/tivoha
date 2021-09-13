@@ -1,9 +1,11 @@
-# homeassistant-tivo
+# tivoha
 Tivo component for Home Assistant (updated for Homeassistant 0.92.X)
 
 Based on ideas from the following sites:
 
 ```
+https://github.com/jcollas/homeassistant-tivo.git
+
 https://community.home-assistant.io/t/control-tivo-box-over-telnet/12430/65
 https://www.tivocommunity.com/community/index.php?threads/tivo-ui-control-via-telnet-no-hacking-required.392385/
 https://community.home-assistant.io/t/tivo-media-player-component/851
