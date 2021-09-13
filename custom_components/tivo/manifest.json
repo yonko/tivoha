@@ -1,6 +1,6 @@
 {
-	"domain": "tivo",
-	"name": "Tivo",
+	"domain": "tivoha",
+	"name": "tivoha",
 	"documentation": "https://github.com/yonko/tivoha/blob/master/README.md",
 	"dependencies": [],
 	"codeowners": [],
